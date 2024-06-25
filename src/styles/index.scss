@@ -1,0 +1,13 @@
+.uni-forms-item {
+  &.uni-forms-item--border {
+    padding: 16upx 0;
+    .uni-forms-item__content {
+      height: 72upx;
+      line-height: 72upx;
+      uni-data-checkbox {
+        position: relative;
+        top: 10upx;
+      }
+    }
+  }
+}
