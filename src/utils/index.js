@@ -1,38 +1,76 @@
-import { USER_INFO, ACCESS_TOKEN } from '@/constants/index'
+import { USER_INFO } from '@/constants/index'
+import pinyin from 'js-pinyin'
+pinyin.setOptions({ checkPolyphone: false, charCase: 0 })
 
 export const startsWithKey = (path, key) => {
   return path ? (path.startsWith(key) ? path : `${key}${path}`) : undefined
 }
-
-export const setTokenInfo = (token) => {
-  const tokenInfo = token
-  const userInfo = {
-    number: tokenInfo.number,
-    name: tokenInfo.name,
-    userId: tokenInfo.userid,
-    mobile: tokenInfo.mobile,
-    externalId: tokenInfo.externalId,
-    //微信的
-    openId: tokenInfo.openid
-  }
-  uni.setStorageSync(USER_INFO, userInfo)
-  uni.setStorageSync(ACCESS_TOKEN, token)
+export const clearUniStorage = () => {
+  uni.removeStorageSync('token')
+  uni.removeStorageSync('owner')
+  uni.removeStorageSync(USER_INFO)
+  uni.removeStorageSync('addressType')
 }
-
 export const getUserInfo = () => {
-  //console.log('tokenInfo', weappJwtDecode(uni.getStorageSync(ACCESS_TOKEN)))
-  //通过判断 userInfo.userId来确定是否已登录
   if (uni.getStorageSync(USER_INFO)) {
     return uni.getStorageSync(USER_INFO)
   } else {
     return {}
-    //return { mobile: 15253599915, userId: 11 }
   }
 }
 
+export const sortByChar = (order = 'asc', props) => {
+  return function (a, b) {
+    if (props) {
+      //return a[props].localeCompare(b[props])
+      if (a[props] < b[props]) {
+        return order === 'asc' ? -1 : 1
+      } else if (a[props] > b[props]) {
+        return order === 'asc' ? 1 : -1
+      } else {
+        return 0
+      }
+    } else {
+      //return a.localeCompare(b)
+      if (a < b) {
+        return order === 'asc' ? -1 : 1
+      } else if (a > b) {
+        return order === 'asc' ? 1 : -1
+      } else {
+        return 0
+      }
+    }
+  }
+}
+
+export const sortBy = (order = 'asc', props) => {
+  return function (a, b) {
+    if (props) {
+      //return a[props].localeCompare(b[props])
+      if (pinyin.getCamelChars(a[props]) < pinyin.getCamelChars(b[props])) {
+        return order === 'asc' ? -1 : 1
+      } else if (pinyin.getCamelChars(a[props]) > pinyin.getCamelChars(b[props])) {
+        return order === 'asc' ? 1 : -1
+      } else {
+        return 0
+      }
+    } else {
+      //return a.localeCompare(b)
+      if (pinyin.getCamelChars(a) < pinyin.getCamelChars(b)) {
+        return order === 'asc' ? -1 : 1
+      } else if (pinyin.getCamelChars(a) > pinyin.getCamelChars(b)) {
+        return order === 'asc' ? 1 : -1
+      } else {
+        return 0
+      }
+    }
+  }
+}
 export const logout = () => {
-  uni.removeStorageSync(USER_INFO)
-  uni.removeStorageSync(ACCESS_TOKEN)
+  // uni.removeStorageSync(USER_INFO)
+  // uni.removeStorageSync('token')
+  // uni.removeStorageSync('owner')
+  clearUniStorage()
 }
 
 export function formatTime(time, format) {
@@ -69,15 +107,15 @@ export function formatTime(time, format) {
 }
 
 export function getDayTimeStamp() {
-  var dateTime = new Date()
-  dateTime = dateTime.setDate(dateTime.getDate() - 1)
-  const last = new Date('2023-06-21')
-  last.setHours(0, 0, 0, 0)
-  return last.getTime()
+  // var dateTime = new Date()
+  // dateTime = dateTime.setDate(dateTime.getDate() - 1)
+  // const last = new Date('2023-06-21')
+  // last.setHours(0, 0, 0, 0)
+  // return last.getTime()
 
-  // const now = new Date()
-  // now.setHours(0, 0, 0, 0)
-  // return now.getTime()
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  return now.getTime()
 }
 
 export function accMul(arg1, arg2) {
@@ -95,4 +133,19 @@ export function accMul(arg1, arg2) {
   } catch (e) {}
 
   return (Number(s1.replace('.', '')) * Number(s2.replace('.', ''))) / Math.pow(10, m)
+}
+
+export const getOrderStatus = (statusList = []) => {
+  if (statusList.length > 0) {
+    const status = statusList[0]
+    if (status.indexOf('取消确认中') > -1) {
+      return 'canceling'
+    } else if (status.indexOf('订单取消') > -1) {
+      return 'cancel'
+    } else {
+      return ''
+    }
+  } else {
+    return ''
+  }
 }

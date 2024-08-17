@@ -3,12 +3,12 @@ export function useUpdate() {
   function update() {
     const updateManager = uni.getUpdateManager()
 
-    updateManager.onCheckForUpdate(function () {
+    updateManager?.onCheckForUpdate(function () {
       // 请求完新版本信息的回调
       //console.log(res.hasUpdate)
     })
 
-    updateManager.onUpdateReady(function () {
+    updateManager?.onUpdateReady(function () {
       uni.showModal({
         title: '更新提示',
         content: '新版本已经准备好，是否重启应用？',
@@ -22,7 +22,7 @@ export function useUpdate() {
       })
     })
 
-    updateManager.onUpdateFailed(function () {
+    updateManager?.onUpdateFailed(function () {
       // 新的版本下载失败
       uni.showModal({
         title: '提示',

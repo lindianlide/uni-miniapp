@@ -7,11 +7,16 @@
         "navigationBarTitleText": "首页"
       }
     },
-
     {
       "path": "pages/index/orderDetails",
       "style": {
         "navigationBarTitleText": "确认订单"
+      }
+    },
+    {
+      "path": "pages/order/myOrder",
+      "style": {
+        "navigationBarTitleText": "我的订单"
       }
     },
     {
@@ -31,6 +36,36 @@
       "style": {
         "navigationBarTitleText": "我的地址"
       }
+    },
+    {
+      "path": "pages/my/aboutUs",
+      "style": {
+        "navigationBarTitleText": "关于我们"
+      }
+    },
+    {
+      "path": "pages/my/mySetting",
+      "style": {
+        "navigationBarTitleText": "系统设置"
+      }
+    },
+    {
+      "path": "pages/my/customerNeed",
+      "style": {
+        "navigationBarTitleText": "客户需求"
+      }
+    },
+    {
+      "path": "pages/my/businessCooperate",
+      "style": {
+        "navigationBarTitleText": "商务合作"
+      }
+    },
+    {
+      "path": "pages/my/mySuggestion",
+      "style": {
+        "navigationBarTitleText": "投诉建议"
+      }
     }
   ],
   "tabBar": {
@@ -44,6 +79,12 @@
         "iconPath": "static/images/home.png",
         "selectedIconPath": "static/images/home-select.png",
         "text": "产品报价"
+      },
+      {
+        "pagePath": "pages/order/myOrder",
+        "iconPath": "static/images/order.png",
+        "selectedIconPath": "static/images/order-select.png",
+        "text": "我的订单"
       },
       {
         "pagePath": "pages/my/myIndex",

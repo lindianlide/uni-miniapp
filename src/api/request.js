@@ -1,18 +1,18 @@
+import { clearUniStorage } from '@/utils'
 const baseURL = 'https://madan.dayangjingzhou.top/api'
 
 const request = (
   method,
   url,
   data,
-  { showLoading = true, hideToast = false, needToken = true, errorShow = true } = {}
+  { showLoading = false, hideToast = false, needToken = true, errorShow = true } = {}
 ) => {
   return new Promise((resolve) => {
     showLoading && uni.showLoading({ mask: true })
-
     let token = uni.getStorageSync('token')
     if (!token && needToken) {
-      uni.showToast({ title: '请先登录', icon: 'none' })
-      uni.clearStorage()
+      //uni.showToast({ title: '请先登录', icon: 'none' })
+      clearUniStorage()
       uni.reLaunch({ url: '/pages/my/loginOther' })
       return
     }
@@ -32,10 +32,10 @@ const request = (
       data,
       header: { 'content-type': 'application/json', __token__: data.token },
       success: (res) => {
-        uni.hideLoading()
+        showLoading && uni.hideLoading()
         if (res.data.code == 401) {
           uni.showToast({ title: '登录过期', icon: 'none' })
-          uni.clearStorage()
+          clearUniStorage()
           setTimeout(() => {
             uni.reLaunch({ url: '/pages/my/loginOther' })
           }, 300)
@@ -47,7 +47,7 @@ const request = (
             res.data.msg ===
               '由于检测到您的使用与平台运营协议违背，现对您的账号做封停处理，如有疑问请咨询客服'
           ) {
-            uni.clearStorage()
+            clearUniStorage()
             uni.reLaunch({ url: '/pages/my/loginOther' })
           }
           errorShow &&
@@ -62,7 +62,7 @@ const request = (
         }
       },
       fail: (err) => {
-        uni.hideLoading()
+        showLoading && uni.hideLoading()
         resolve(err)
       }
     })

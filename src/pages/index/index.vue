@@ -87,8 +87,8 @@
                   v-for="(shop, index3) in thirdItem.children"
                   :key="index3"
                 >
-                  <view class="shop-info">
-                    <text>{{ shop.name }}</text>
+                  <view class="shop-info" :class="{ 'no-left': shop.left }">
+                    <text class="shop-text">{{ shop.name }}</text>
                     <!-- 加减 -->
                     <view class="shop-btn">
                       <view>
@@ -110,22 +110,25 @@
               </view>
             </view>
           </view>
+          <view style="height: 50px"></view>
         </view>
       </scroll-view>
       <shop-cart
         :shops="secondCategorys"
+        :addressType="addressType"
         @add="addCart"
         @dec="decreaseCart"
         @delAll="delAll"
       ></shop-cart>
     </view>
+    <div class="loading" v-if="isloading"></div>
   </view>
 </template>
 
 <script>
 import ShopCart from './components/ShoppingCart.vue'
 import NumControl from './components/NumControl.vue'
-import { formatTime } from '@/utils/index'
+import { formatTime, clearUniStorage } from '@/utils/index'
 import { getCategoryList, getAllPriceList } from '@/api/index'
 
 export default {
@@ -144,34 +147,61 @@ export default {
       right_height: [], //右侧每个内容的高度集合
       select_index: 0,
       left_height: 0, //左侧总高度
-      left_scroll: 0 //左侧滑动值,
+      left_scroll: 0, //左侧滑动值,
+      isloading: true,
+      adddressType: 'sh'
     }
   },
   components: {
     ShopCart,
     NumControl
   },
+
+  onShareAppMessage() {
+    const owner = uni.getStorageSync('owner') || [{}]
+    const { id, name } = owner[0]
+    return {
+      //title: '自定义转发标题',
+      path: 'pages/index/index?id=' + id + '&name=' + name
+    }
+  },
+  onShow() {
+    let token = uni.getStorageSync('token')
+    if (!token) {
+      clearUniStorage()
+      uni.reLaunch({ url: '/pages/my/loginOther' })
+    }
+  },
   onLoad() {
-    this.windows_height = Number(uni.getSystemInfoSync().windowHeight) - 60 - 70
+    this.windows_height = Number(uni.getSystemInfoSync().windowHeight) - 85
+    this.addressType = uni.getStorageSync('addressType') || 'sh'
 
     getCategoryList().then((res) => {
       this.categorys = res
-      console.log('getCategoryList', res)
     })
 
-    getAllPriceList().then((priceRes) => {
-      console.log('frozen', priceRes)
-      this.categorys.forEach((first) => {
-        first.children.forEach((second) => {
-          second.children.forEach((third) => {
-            third.children = priceRes[third.key]
+    getAllPriceList()
+      .then((priceRes) => {
+        this.isloading = false
+        this.categorys.forEach((first) => {
+          first.children.forEach((second) => {
+            second.children.forEach((third) => {
+              third.children = priceRes[third.key]
+            })
           })
         })
+        setTimeout(() => {
+          this.getHeightList()
+        }, 1000)
       })
-      setTimeout(() => {
-        this.getHeightList()
-      }, 1000)
-    })
+      .catch(() => {
+        this.isloading = false
+      })
+
+    // uni.showShareMenu({
+    //   withShareTicket: true,
+    //   menus: ['shareAppMessage', 'shareTimeline']
+    // })
   },
   computed: {
     firstCategorys() {
@@ -221,6 +251,8 @@ export default {
     },
     onClicktab(e) {
       this.currentFirstIndex = e.currentIndex
+      //todo zw
+      this.addressType = this.firstCategorys[e.currentIndex] === '广州' ? 'gz' : 'sh'
     },
 
     selectThird(secIndex, thirdIndex) {
@@ -319,10 +351,15 @@ export default {
         let active_index = this.right_height.findIndex(
           (value, index, arr) => value <= scroll_top && scroll_top < arr[index + 1]
         )
+        //底部新增高度引发选中错误问题
+        if (active_index === -1) {
+          active_index = this.right_height.length - 1
+        }
         this.currentThirdIndex = active_index
         let countIndex = 0
         for (let i = 0; i < this.secondCategorys.length; i++) {
           countIndex += this.secondCategorys[i].children.length
+
           if (active_index < countIndex) {
             this.currentSecIndex = i
             const thirdIndex = active_index + this.secondCategorys[i].children.length - countIndex
@@ -366,7 +403,9 @@ export default {
       font-size: 28upx;
       ::v-deep .segmented-control {
         height: 48upx;
-        width: 180upx;
+        .segmented-control__item {
+          max-width: 90upx;
+        }
       }
     }
   }
@@ -387,7 +426,7 @@ export default {
   display: flex;
   position: absolute;
   top: 140upx;
-  bottom: 104upx;
+  bottom: 0upx;
   width: 100%;
   overflow: hidden;
 
@@ -421,6 +460,7 @@ export default {
       align-items: center;
       justify-content: center;
       height: 60upx;
+      white-space: nowrap;
       &.current {
         background-color: #e6f4ff;
         color: #00a0dc;
@@ -448,6 +488,27 @@ export default {
       display: flex;
       flex-direction: row;
     }
+    .shop-info-box {
+      + .shop-info-box {
+        border-top: 1px solid #eee;
+      }
+    }
+    .no-left {
+      &::after {
+        border-radius: 10upx;
+        padding-top: 20upx;
+        padding-right: 40upx;
+        text-align: right;
+        content: '售罄';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background-color: #d9d9d9;
+        opacity: 0.5;
+      }
+    }
 
     .shop-title {
       padding: 10upx 0 10upx 0upx;
@@ -461,6 +522,7 @@ export default {
     }
 
     .shop-info {
+      position: relative;
       padding: 10upx 20upx 10upx 10upx;
       display: flex;
       flex-direction: column;
@@ -480,13 +542,20 @@ export default {
       }
     }
 
+    .shop-text {
+      font-size: 30upx;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 515upx;
+      white-space: nowrap;
+    }
     .shop-btn {
       justify-content: space-between;
     }
 
     .shop-price {
       color: #f01414;
-      font-size: 28upx;
+      font-size: 30upx;
     }
   }
 }

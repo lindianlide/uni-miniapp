@@ -1,5 +1,7 @@
 // 登录核心类
 import { postLoginIn } from '@/api/index'
+import { USER_INFO } from '@/constants/index'
+
 export function useLogin() {
   /**
    * 登录code || name,captcha
@@ -14,16 +16,21 @@ export function useLogin() {
               const {
                 imw6zmq_userhelp_imz2: owner,
                 id,
-                ixyi1j4_maminput_dhot: gzAddress,
-                i6t5xj1_maminput_2m4w: shAddress
+                ixyi1j4_maminput_dhot: gzAddress
+                //i6t5xj1_maminput_2m4w: shAddress
               } = res.data[0] || {}
 
               uni.setStorageSync('token', res.data.token)
+              const share = uni.getStorageSync('share')
               uni.setStorageSync(
                 'owner',
-                owner || [{ name: '黄宁', id: '34bb016e316d4466828de1acf1b827a2' }]
+                owner || share || [{ name: '佳妮', id: 'ca3c868e7d4d4832a1dc13f0e2ed54bb' }]
               )
-              uni.setStorageSync('userInfo', { phone: params.phone, id: id, gzAddress, shAddress })
+              uni.setStorageSync(USER_INFO, {
+                phone: params.phone,
+                id: id
+              })
+              uni.setStorageSync('addressType', gzAddress ? 'gz' : 'sh')
               uni.reLaunch({ url: '/pages/index/index' })
             } else {
               uni.showToast({

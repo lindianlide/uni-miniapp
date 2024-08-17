@@ -1,10 +1,13 @@
 <template>
   <view class="order-detail">
-    <view class="order-notice"> 注：三文鱼价格不计入总价，具体价钱与业务员核实 </view>
+    <!-- <view class="order-notice"> 注：三文鱼价格不计入总价，具体价钱与业务员核实 </view> -->
     <view class="order-info">
       <uni-section title="地址信息">
         <view class="order-item item-flex">
-          <text class="text-name">姓名：</text>
+          <view>
+            <text class="is-required">*</text>
+            <text class="text-name">姓名：</text>
+          </view>
           <uni-easyinput
             placeholder="请填写姓名"
             v-model="userName"
@@ -13,7 +16,10 @@
           />
         </view>
         <view class="order-item item-flex">
-          <text class="text-name">手机号：</text>
+          <view>
+            <text class="is-required">*</text>
+            <text class="text-name">手机号：</text>
+          </view>
           <uni-easyinput
             placeholder="请填写手机号"
             v-model="userPhone"
@@ -23,7 +29,10 @@
           />
         </view>
         <view class="order-item item-flex">
-          <text class="text-name">物流信息：</text>
+          <view>
+            <text class="is-required">*</text>
+            <text class="text-name">物流信息：</text>
+          </view>
           <uni-easyinput
             placeholder="请填写物流信息"
             v-model="userAddress"
@@ -69,7 +78,7 @@
 <script>
 import { useAppStore } from '@/stores/modules/app'
 
-import { postOrderAdd } from '@/api/index'
+import { postOrderAdd, getUserDetail, postUserUpdate } from '@/api/index'
 import { accMul } from '@/utils/index'
 
 export default {
@@ -79,7 +88,8 @@ export default {
       userName: '',
       userPhone: '',
       userAddress: '',
-      remark: ''
+      remark: '',
+      addressType: ''
     }
   },
   computed: {
@@ -102,20 +112,34 @@ export default {
       return result
     }
   },
+  onLoad: function (options) {
+    this.addressType = options.addressType || 'sh'
+  },
   onShow: function () {
     this.orderList = useAppStore().orderList
-    // this.orderDetInfo=JSON.parse(getApp().globalData.orderDetInfo);
-    // this.orderDetInfo = JSON.parse(getApp().globalData.orderDetInfo)
-    // console.log(this.orderDetInfo, JSON.parse(getApp().globalData.orderDetInfo))
-    // this.buylist = JSON.parse(JSON.parse(getApp().globalData.orderDetInfo).buyList)
-    console.log(useAppStore().orderList)
-    // this.buylist = JSON.parse(getApp().globalData.orderDetInfo.buylist)
-
-    console.log(1111, uni.getStorageSync('ownerName'))
+    getUserDetail().then((res) => {
+      this.userName = res.name || ''
+      this.userPhone = res.mobile || ''
+      this.userAddress = res.address || ''
+    })
   },
   methods: {
     submitOrder() {
-      this.orderList.forEach((order) => {
+      if (!this.userName || !this.userPhone || !this.userAddress) {
+        uni.showToast({ title: '请填写地址信息！', icon: 'none' })
+        return
+      }
+      const params = {
+        type: this.addressType,
+        name: this.userName,
+        address: this.userAddress,
+        mobile: this.userPhone
+      }
+      postUserUpdate(params).then(() => {
+        uni.setStorageSync('addressType', this.addressType)
+      })
+
+      this.orderList.forEach((order, index) => {
         const params = {
           userName: this.userName,
           userPhone: this.userPhone,
@@ -123,9 +147,19 @@ export default {
           remark: this.remark,
           price: order.price,
           count: order.count,
-          name: order.name
+          name: order.name,
+          category: order.category,
+          supply: order.supply,
+          costPrice: order.costPrice
         }
-        postOrderAdd(params).then()
+        postOrderAdd(params)
+          .then(() => {})
+          .finally(() => {
+            if (index === this.orderList.length - 1)
+              uni.reLaunch({
+                url: '/pages/index/index'
+              })
+          })
       })
     }
   }
@@ -137,6 +171,10 @@ export default {
   background-color: #f5f5f5;
   height: 100vh;
 
+  .is-required {
+    color: #dd524d;
+    font-weight: 700;
+  }
   .order-info {
     padding: 24upx;
   }

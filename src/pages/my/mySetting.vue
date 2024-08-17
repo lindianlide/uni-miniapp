@@ -10,7 +10,7 @@
           :rightText="setItem.rightText"
         />
       </uni-list>
-      <button v-if="userInfo.userId" type="info" class="setting-button" @click="goLoginout">
+      <button v-if="userInfo.id" type="info" class="setting-button" @click="goLoginout">
         退出登录
       </button>
     </view>
@@ -29,7 +29,7 @@ onShow(() => {
   settingList.value = [
     {
       label: '绑定手机号',
-      rightText: userInfo.value.mobile
+      rightText: userInfo.value.phone
     },
     {
       label: '版本号',

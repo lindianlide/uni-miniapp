@@ -1,17 +1,17 @@
 <template>
-  <view style="display: flex; flex-direction: row; height: 18px">
+  <view style="display: flex; flex-direction: row; height: 20px">
     <view class="shop-control">
       <view class="cont" @click="decreaseCart(shop)" v-show="shop.count > 0">
-        <image src="/static/images/des.png" mode="" style="width: 18px; height: 18px"></image>
+        <image src="/static/images/des.png" mode="" style="width: 20px; height: 20px"></image>
       </view>
-      <text style="padding: 0 4px; position: relative; top: -1px" v-show="shop.count > 0">{{
+      <text style="padding: 0 5px; position: relative; font-size: 14px" v-show="shop.count > 0">{{
         shop.count
       }}</text>
     </view>
     <view class="cont" @click="addCart(shop)">
       <image
         src="/static/images/add2.png"
-        style="width: 18px; height: 18px; color: #cccccc"
+        style="width: 20px; height: 20px; color: #cccccc"
       ></image>
     </view>
   </view>

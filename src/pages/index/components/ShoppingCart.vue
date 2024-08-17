@@ -1,5 +1,5 @@
 <template>
-  <view class="shopcart">
+  <view class="shopcart" :class="shopList.length ? '' : 'no-good'">
     <!-- 购物车 -->
     <view class="cartBottom">
       <view class="carIcon" @click="toggleList">
@@ -50,6 +50,10 @@ export default {
     shops: {
       type: Array,
       default: () => []
+    },
+    addressType: {
+      type: String,
+      default: 'sh'
     }
   },
   data() {
@@ -121,7 +125,7 @@ export default {
       } else {
         useAppStore().setOrderList(this.shopList)
         uni.navigateTo({
-          url: '/pages/index/orderDetails'
+          url: '/pages/index/orderDetails?addressType=' + this.addressType
         })
       }
     }
@@ -138,12 +142,14 @@ export default {
 .shopcart {
   position: fixed;
   bottom: 10upx;
-  left: 1%;
-  right: 0;
+  left: 30upx;
+  right: 20upx;
   height: 48px;
-  width: 98%;
   border-radius: 24px;
   overflow: hidden;
+  &.no-good {
+    width: 50px;
+  }
 }
 
 .shopcart .cartBottom {
@@ -160,7 +166,7 @@ export default {
   background-color: #ebf0f3;
   border-radius: 50%;
   height: 48px;
-  width: 48px;
+  width: 50px;
   line-height: 55px;
   /* border: 6px solid #141d27; */
   position: relative;

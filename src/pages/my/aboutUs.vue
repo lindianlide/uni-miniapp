@@ -11,11 +11,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-import { getForms } from '@/api/core/index'
-
-onMounted(() => {
-  getForms({ miniapp: true, category: 'WECHAT' }).then((res) => {})
-})
+onMounted(() => {})
 </script>
 
 <style lang="scss" scoped>
@@ -24,8 +20,8 @@ onMounted(() => {
     margin-top: 400upx;
     text-align: center;
     .logo-img {
-      width: 422upx;
-      height: 38upx;
+      width: 328upx;
+      height: 168upx;
     }
   }
 }

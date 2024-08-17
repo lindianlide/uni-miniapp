@@ -3,10 +3,24 @@
     <view class="address-info">
       <uni-section title="地址信息">
         <view class="address-item item-flex">
+          <text class="text-name">发货仓：</text>
+          <radio-group @change="radioChange">
+            <label v-for="item in addressRadio" :key="item.value">
+              <radio
+                style="transform: scale(0.7)"
+                :value="item.value"
+                :checked="item.value === currentRadio"
+              />
+              <text>{{ item.name }}</text>
+            </label>
+          </radio-group>
+        </view>
+
+        <view class="address-item item-flex">
           <text class="text-name">姓名：</text>
           <uni-easyinput
             placeholder="请填写姓名"
-            v-model="remark"
+            v-model="name"
             :inputBorder="false"
             :clearable="false"
           />
@@ -15,7 +29,7 @@
           <text class="text-name">手机号：</text>
           <uni-easyinput
             placeholder="请填写手机号"
-            v-model="remark"
+            v-model="mobile"
             type="number"
             :inputBorder="false"
             :clearable="false"
@@ -25,7 +39,7 @@
           <text class="text-name">物流信息：</text>
           <uni-easyinput
             placeholder="请填写物流信息"
-            v-model="remark"
+            v-model="address"
             :inputBorder="false"
             :clearable="false"
           />
@@ -38,15 +52,58 @@
 </template>
 
 <script>
+import { postUserUpdate, getUserDetail } from '@/api/index'
+
 export default {
   data() {
     return {
-      remark: ''
+      id: '',
+      name: '',
+      mobile: '',
+      address: '',
+      currentRadio: 'sh',
+      addressRadio: [
+        {
+          value: 'sh',
+          name: '上海',
+          checked: 'true'
+        },
+        {
+          value: 'gz',
+          name: '广州'
+        }
+      ]
     }
   },
 
-  onShow: function () {},
-  methods: {}
+  onShow: function () {
+    getUserDetail().then((res) => {
+      this.id = res.id || ''
+      this.name = res.name || ''
+      this.mobile = res.mobile || ''
+      this.address = res.address || ''
+      this.currentRadio = res.addressType
+    })
+  },
+  methods: {
+    radioChange(e) {
+      this.currentRadio = e.detail.value
+    },
+    submit() {
+      const params = {
+        type: this.currentRadio,
+        name: this.name,
+        address: this.address,
+        mobile: this.mobile
+      }
+      postUserUpdate(params).then(() => {
+        uni.setStorageSync('addressType', this.currentRadio)
+        uni.switchTab({
+          url: '/pages/my/myIndex'
+        })
+      })
+    }
+  }
 }
 </script>
 
