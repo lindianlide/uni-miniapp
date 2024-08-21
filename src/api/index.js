@@ -11,7 +11,8 @@ import {
 
 // 先按sort1排序，sort1相同再按sort2排序
 function myFishsort(a, b) {
-  if (a.sort1 !== b.sort1) return parseFloat(a.sort1) < parseFloat(b.sort1) ? 1 : -1
+  if (a.relative !== b.relative) return a.relative < b.relative ? -1 : 1
+  else if (a.sort1 !== b.sort1) return parseFloat(a.sort1) < parseFloat(b.sort1) ? 1 : -1
   else if (a.sort2 !== b.sort2) return parseFloat(a.sort2) < parseFloat(b.sort2) ? -1 : 1
 }
 
@@ -105,7 +106,7 @@ export const getAllPriceList = () => {
 
   return Promise.all([reqShFish, reqGzFish, reqShFrozen1]).then((values) => {
     // uni.hideLoading()
-    const listAll = [...values[0], ...values[1], ...values[2]].filter((item) => item.relative)
+    const listAll = [...values[0], ...values[1], ...values[2]]
     const groupList = groupBy(listAll, 'relative')
     //todo 排序
     //console.log('values[2]', values[2])
@@ -145,9 +146,11 @@ export const getShFishList = () => {
           sort1: filterItem.i93qz0a_maminput_7a63, //日期
           sort2: filterItem.i3ynqdj_maminput_peev, //厂号
           category: '上海仓',
+          type: 'fish',
           costPrice: filterItem.iuqrlct_digitalformat_3ygo //成本单价
         }
       })
+      .filter(item => item.relative)
     return result.sort(myFishsort)
   })
 }
@@ -186,9 +189,11 @@ export const getShFrozenList = (pageNo = 1, pageSize = 200) => {
         costPrice: filterItem.ixwev4e_digitalformat_iz4j //成本单价
       }
     })
+    .filter(item => item.relative)
     // 先按sort1排序，sort1相同再按sort2排序
     function mysortFrozen(a, b) {
-      if (a.sort1 !== b.sort1) return a.sort1 < b.sort1 ? -1 : 1
+      if (a.relative !== b.relative) return a.relative < b.relative ? -1 : 1
+      else if (a.sort1 !== b.sort1) return a.sort1 < b.sort1 ? -1 : 1
       else if (a.sort2 !== b.sort2) return a.sort2 < b.sort2 ? -1 : 1
     }
     return result.sort(mysortFrozen)
@@ -257,9 +262,10 @@ export const getGzFrishList = () => {
           sort1: filterItem.i93qz0a_maminput_7a63, //一级排序
           sort2: filterItem.ii97iyb_maminput_4tan, //二级排序
           category: '广州仓',
+          type: 'fish',
           costPrice: filterItem.iz7pni8_digitalformat_ehlp //成本单价
         }
-      })
+      }).filter(item => item.relative)
 
     return result.sort(myFishsort)
   })

@@ -141,12 +141,14 @@ export default {
 
 .shopcart {
   position: fixed;
-  bottom: 10upx;
-  left: 30upx;
-  right: 20upx;
+  margin: 0 20upx 10upx 30upx;
+  bottom: 0upx;
+  left: 0upx;
+  right: 0upx;
   height: 48px;
   border-radius: 24px;
   overflow: hidden;
+  background: #fff;
   &.no-good {
     width: 50px;
   }
@@ -198,7 +200,7 @@ export default {
 }
 
 .carIcon .active {
-  background-color: #00a0dc;
+  background-color: #0a28a7de;
 }
 
 .middle {
@@ -217,14 +219,14 @@ export default {
   z-index: 99999;
   text-align: center;
   line-height: 2em;
-  background-color: #00a0dc;
+  background-color: #0a28a7;
   color: #fff;
   line-height: 48px;
 }
 
 .cartList {
   position: fixed;
-  bottom: 54px;
+  bottom: 53px;
   left: 0;
   right: 0;
   z-index: 90;

@@ -160,8 +160,8 @@ const goLoginHome = () => {
         justify-content: center;
         width: 140upx;
         height: 140upx;
-        background-color: #f5f5f5;
-        margin-right: 10upx;
+        background-color: #f5f5f580;
+        margin-right: 20upx;
         margin-top: 10upx;
       }
     }

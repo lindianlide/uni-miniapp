@@ -237,7 +237,7 @@ export default {
     display: flex;
     flex-direction: column;
     font-size: 32upx;
-    background-color: #4096ff;
+    background-color: #0a28a7;
     color: #fff;
     opacity: 0.8;
     max-width: 180upx;

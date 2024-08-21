@@ -38,7 +38,7 @@
                 style="margin-left: 10px"
                 :type="secItem.fold ? 'down' : 'up'"
                 size="12"
-                :color="currentSecIndex == secIndex ? '#00a0dc' : '#000000'"
+                :color="currentSecIndex == secIndex ? '#0a28a7' : '#000000'"
               ></uni-icons>
             </view>
             <view v-show="!secItem.fold">
@@ -87,7 +87,22 @@
                   v-for="(shop, index3) in thirdItem.children"
                   :key="index3"
                 >
-                  <view class="shop-info" :class="{ 'no-left': shop.left }">
+                  <view v-if="shop.type === 'fish'" class="shop-info info-fish" :class="{ 'no-left': shop.left }">
+                    <!-- 加减 -->
+                    <view class="shop-btn">
+                      <view>
+                       <text class="shop-text">{{ shop.name }}</text>
+                        <uni-tag
+                          v-for="(tag, tagIndex) in shop.tag"
+                          :key="tagIndex"
+                          :text="tag"
+                          :type="computedTag(tag)"
+                        />
+                      </view>
+                      <num-control :shop="shop" @add="addCart" @dec="decreaseCart"></num-control>
+                    </view>
+                  </view>
+                  <view v-else class="shop-info" :class="{ 'no-left': shop.left }">
                     <text class="shop-text">{{ shop.name }}</text>
                     <!-- 加减 -->
                     <view class="shop-btn">
@@ -137,7 +152,7 @@ export default {
       nowDate: formatTime('', 'yyyy年mm月dd日'),
       categorys: [],
       currentFirstIndex: 0,
-      activeColor: '#00a0dc',
+      activeColor: '#0a28a7',
       styleType: 'button',
       windows_height: 0, //屏幕高度
       shopSTop: 0, //右侧的滑动值
@@ -208,6 +223,7 @@ export default {
       return this.categorys.map((firstCategory) => firstCategory.name)
     },
     secondCategorys() {
+      console.log(this.categorys[this.currentFirstIndex]?.children)
       return this.categorys[this.currentFirstIndex]?.children || []
     },
     computedTag() {
@@ -449,7 +465,8 @@ export default {
       background-color: #fff;
       &.current {
         background-color: #fff;
-        color: #00a0dc;
+        color: #0a28a7;
+        font-weight: bold;
       }
     }
 
@@ -463,7 +480,8 @@ export default {
       white-space: nowrap;
       &.current {
         background-color: #e6f4ff;
-        color: #00a0dc;
+        color: #0a28a7;
+        font-weight: bold;
       }
     }
     .menu-count {
@@ -512,8 +530,9 @@ export default {
 
     .shop-title {
       padding: 10upx 0 10upx 0upx;
-      font-size: 28upx;
-      color: #8c8c8c;
+      font-size: 32upx;
+      color: #0a28a7;//#8c8c8c;
+      font-weight: bold;
     }
     .shop-no {
       padding: 10upx 0 10upx 0upx;
@@ -530,6 +549,18 @@ export default {
       font-size: 28upx;
       justify-content: space-between;
       height: 90upx;
+      &.info-fish {
+        height: 60upx;
+        line-height: 60upx;
+        .shop-btn {
+          align-item: center;
+          align-content: center;
+        }
+        num-control {
+          position: relative;
+          top: 10upx;
+        }
+      }
 
       ::v-deep .uni-tag {
         position: relative;
