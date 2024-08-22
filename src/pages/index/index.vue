@@ -1,6 +1,10 @@
 <template>
   <view class="shop-container">
     <view class="title-box">
+      <view class="search-box">
+        <uni-search-bar v-model="searchValue" placeholder="搜索" cancelButton="none" @input="onInput" @clear="onClear">
+        </uni-search-bar>
+      </view>
       <view class="title-tag"
         ><uni-segmented-control
           :current="currentFirstIndex"
@@ -11,11 +15,6 @@
         />
       </view>
     </view>
-    <view class="info-box">
-      <!-- 日期 -->
-      <view class="info-date">{{ nowDate }}</view>
-    </view>
-
     <view class="shop-wrap">
       <scroll-view
         class="menu-wrapper"
@@ -81,10 +80,10 @@
               <view class="shop-title">
                 {{ thirdItem.name }}
               </view>
-              <view v-if="thirdItem.children && thirdItem.children.length > 0">
+              <view v-if="computedThirdItem(thirdItem).length > 0">
                 <view
                   class="shop-info-box"
-                  v-for="(shop, index3) in thirdItem.children"
+                  v-for="(shop, index3) in computedThirdItem(thirdItem)"
                   :key="index3"
                 >
                   <view v-if="shop.type === 'fish'" class="shop-info info-fish" :class="{ 'no-left': shop.left }">
@@ -164,7 +163,8 @@ export default {
       left_height: 0, //左侧总高度
       left_scroll: 0, //左侧滑动值,
       isloading: true,
-      adddressType: 'sh'
+      adddressType: 'sh',
+      searchValue: ''
     }
   },
   components: {
@@ -223,7 +223,6 @@ export default {
       return this.categorys.map((firstCategory) => firstCategory.name)
     },
     secondCategorys() {
-      console.log(this.categorys[this.currentFirstIndex]?.children)
       return this.categorys[this.currentFirstIndex]?.children || []
     },
     computedTag() {
@@ -235,6 +234,11 @@ export default {
         } else {
           return 'primary'
         }
+      }
+    },
+    computedThirdItem() {
+      return (thirdItem) => {
+        return thirdItem?.children?.filter(item => !item.hidden) || []
       }
     },
     // 获得购物车所有商品数量todo
@@ -262,6 +266,26 @@ export default {
     }
   },
   methods: {
+    filterShopList(value){
+       this.secondCategorys.forEach((first) => {
+          first.children?.forEach((second) => {
+             second.children?.forEach(third => {
+               if(third.name.indexOf(value) > -1) {
+                 third.hidden = false
+               } else {
+                 third.hidden = true
+               }
+             })
+          })
+        })
+    },
+    onInput(value) {
+      this.filterShopList(value)
+    },
+    onClear() {
+      this.searchValue = ''
+      this.filterShopList('')
+    },
     toggleMenu(menu) {
       menu.fold = !menu.fold
     },
@@ -399,33 +423,51 @@ export default {
 .shop-container {
   padding: 20upx 0;
   .title-box {
+    display: flex;
     font-size: 50upx;
     position: relative;
-    padding-left: 290upx;
+    padding-left: 20upx;
     padding-top: 16upx;
-    height: 70upx;
-    &::before {
-      content: '';
-      position: absolute;
-      left: 24upx;
-      top: -10upx;
-      width: 180upx;
-      height: 90upx;
-      background: url('../../static/images/logo.png') no-repeat center;
-      background-size: contain;
-    }
-
+    height: 60upx;
+    line-height: 60upx;
+    align-items: center;
+    // &::before {
+    //   content: '';
+    //   position: absolute;
+    //   left: 24upx;
+    //   top: -10upx;
+    //   width: 180upx;
+    //   height: 90upx;
+    //   background: url('../../static/images/logo.png') no-repeat center;
+    //   background-size: contain;
+    // }
+    ::v-deep .search-box {
+        width: 400upx;
+        height: 56upx;
+        margin-right: 40upx;
+        .uni-searchbar {
+          padding: 0;
+          .uni-searchbar__box {
+            height: 56upx;
+          }
+          .uni-searchbar__cancel {
+            line-height: 56upx;
+          }
+        }
+       
+      }
     .title-tag {
       font-size: 28upx;
       ::v-deep .segmented-control {
         height: 48upx;
         .segmented-control__item {
-          max-width: 90upx;
+          //max-width: 90upx;
+          padding: 2upx 10upx;
         }
       }
     }
   }
-
+ 
   .info-box {
     padding-left: 10upx;
     display: flex;
@@ -441,7 +483,7 @@ export default {
 .shop-wrap {
   display: flex;
   position: absolute;
-  top: 140upx;
+  top: 100upx;
   bottom: 0upx;
   width: 100%;
   overflow: hidden;
