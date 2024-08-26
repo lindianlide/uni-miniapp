@@ -243,5 +243,9 @@ export default {
     max-width: 180upx;
     white-space: nowrap;
   }
+  ::v-deep .uni-section-header {
+    font-weight: bold;
+    font-size: 34upx;
+  }
 }
 </style>

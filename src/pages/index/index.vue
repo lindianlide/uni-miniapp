@@ -1,8 +1,8 @@
 <template>
   <view class="shop-container">
-    <view class="title-box">
+    <view class="title-box" :style="{top: menuInfo.top + 'px'}">
       <view class="search-box">
-        <uni-search-bar v-model="searchValue" placeholder="搜索" cancelButton="none" @input="onInput" @clear="onClear">
+        <uni-search-bar v-model="searchValue" placeholder="搜索产品名称" cancelButton="none" @input="onInput" @clear="onClear">
         </uni-search-bar>
       </view>
       <view class="title-tag"
@@ -15,7 +15,7 @@
         />
       </view>
     </view>
-    <view class="shop-wrap">
+    <view class="shop-wrap" :style="{top: menuInfo.bottom + 5 + 'px'}">
       <scroll-view
         class="menu-wrapper"
         scroll-y
@@ -144,7 +144,7 @@ import ShopCart from './components/ShoppingCart.vue'
 import NumControl from './components/NumControl.vue'
 import { formatTime, clearUniStorage } from '@/utils/index'
 import { getCategoryList, getAllPriceList } from '@/api/index'
-
+const menuInfo = uni.getMenuButtonBoundingClientRect();
 export default {
   data() {
     return {
@@ -164,7 +164,8 @@ export default {
       left_scroll: 0, //左侧滑动值,
       isloading: true,
       adddressType: 'sh',
-      searchValue: ''
+      searchValue: '',
+      menuInfo: menuInfo,
     }
   },
   components: {
@@ -383,7 +384,7 @@ export default {
       if (right_content_height == e.detail.scrollTop) {
         return
       }
-      let scroll_top = e.detail.scrollTop + 90 //误差90
+      let scroll_top = e.detail.scrollTop + 100 //误差80
       //判断当前的scrollTop在哪个区间内;
       let now = +new Date()
       if (now - this.last > 50) {
@@ -421,15 +422,14 @@ export default {
 
 <style lang="scss" scoped>
 .shop-container {
-  padding: 20upx 0;
+  padding: 0 0 20upx 0;
   .title-box {
     display: flex;
     font-size: 50upx;
     position: relative;
     padding-left: 20upx;
-    padding-top: 16upx;
-    height: 60upx;
-    line-height: 60upx;
+    height: 70upx;
+    line-height: 70upx;
     align-items: center;
     // &::before {
     //   content: '';
@@ -442,9 +442,9 @@ export default {
     //   background-size: contain;
     // }
     ::v-deep .search-box {
-        width: 400upx;
+        width: 290upx;
         height: 56upx;
-        margin-right: 40upx;
+        margin-right: 34upx;
         .uni-searchbar {
           padding: 0;
           .uni-searchbar__box {
@@ -459,10 +459,17 @@ export default {
     .title-tag {
       font-size: 28upx;
       ::v-deep .segmented-control {
-        height: 48upx;
+        height: 56upx;
+        border: 2upx solid #0a28a7;
+        border-radius: 28upx;
         .segmented-control__item {
           //max-width: 90upx;
           padding: 2upx 10upx;
+          border: none;
+          &.segmented-control__item--button--active {
+            border-radius: 24upx;
+             padding: 2upx 14upx;
+          }
         }
       }
     }

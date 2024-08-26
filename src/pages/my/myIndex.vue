@@ -2,7 +2,7 @@
   <view class="my-container">
     <view class="my-box">
       <view class="my-left">
-        <image class="my-img" src="/static/images/my.png"></image>
+        <image class="my-img" src="/static/images/cart.png"></image>
         <view class="my-text" v-if="userInfo.phone">
           <text class="my-name">{{ userInfo.name || '微信用户' }}</text>
           <text class="my-num">{{ mobileShow }}</text>
@@ -136,6 +136,9 @@ const goLoginHome = () => {
       .my-img {
         width: 100upx;
         height: 100upx;
+        border-radius: 50upx;
+        padding: 4upx;
+        border: 2upx solid #f5f5f5;
       }
       .my-text {
         margin-left: 40upx;
@@ -178,6 +181,10 @@ const goLoginHome = () => {
 
   ::v-deep .uni-section-content {
     padding: 0 20upx;
+  }
+  ::v-deep .uni-section-header {
+    font-weight: bold;
+    font-size: 34upx;
   }
 }
 </style>

@@ -141,7 +141,7 @@ export default {
 
 .shopcart {
   position: fixed;
-  margin: 0 20upx 10upx 30upx;
+  margin: 0 20upx 5upx 30upx;
   bottom: 0upx;
   left: 0upx;
   right: 0upx;
@@ -155,6 +155,7 @@ export default {
 }
 
 .shopcart .cartBottom {
+  position: relative;
   display: flex;
   background-color: #ebf0f3;
   z-index: 99;
@@ -216,7 +217,7 @@ export default {
 
 .BtnRight {
   flex: 1;
-  z-index: 99999;
+  z-index: 99;
   text-align: center;
   line-height: 2em;
   background-color: #0a28a7;
@@ -226,7 +227,7 @@ export default {
 
 .cartList {
   position: fixed;
-  bottom: 53px;
+  bottom: 100upx;
   left: 0;
   right: 0;
   z-index: 90;
