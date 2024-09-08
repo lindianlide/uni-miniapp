@@ -28,13 +28,14 @@
             v-for="(secItem, secIndex) in secondCategorys"
             :key="secIndex"
           >
+          <view v-if="!secItem.hidden">
             <view
               class="second-menu-item"
               :class="{ current: currentSecIndex == secIndex }"
               @click="toggleMenu(secItem)"
               >{{ secItem.name }}
               <uni-icons
-                style="margin-left: 10px"
+                style="margin-left: 5px"
                 :type="secItem.fold ? 'down' : 'up'"
                 size="12"
                 :color="currentSecIndex == secIndex ? '#0a28a7' : '#000000'"
@@ -47,6 +48,7 @@
                 @click="selectThird(secIndex, thirdIndex)"
               >
                 <view
+                  v-if="!thirdItem.hidden"
                   class="third-menu-item"
                   :class="{ current: currentThirdIndex == secIndex + '-' + thirdIndex }"
                   >{{ thirdItem.name }}</view
@@ -58,6 +60,7 @@
                 >
               </view>
             </view>
+          </view>
           </view>
         </view>
       </scroll-view>
@@ -74,53 +77,56 @@
           <view ref="shopList" v-for="(secondItem, index1) in secondCategorys" :key="index1">
             <view
               class="category-shops"
+              v-if="!secondItem.hidden"
               v-for="(thirdItem, index2) in secondItem.children"
               :key="index2"
             >
-              <view class="shop-title">
-                {{ thirdItem.name }}
-              </view>
-              <view v-if="computedThirdItem(thirdItem).length > 0">
-                <view
-                  class="shop-info-box"
-                  v-for="(shop, index3) in computedThirdItem(thirdItem)"
-                  :key="index3"
-                >
-                  <view v-if="shop.type === 'fish'" class="shop-info info-fish" :class="{ 'no-left': shop.left }">
-                    <!-- 加减 -->
-                    <view class="shop-btn">
-                      <view>
-                       <text class="shop-text">{{ shop.name }}</text>
-                        <uni-tag
-                          v-for="(tag, tagIndex) in shop.tag"
-                          :key="tagIndex"
-                          :text="tag"
-                          :type="computedTag(tag)"
-                        />
+              <view v-if="!thirdItem.hidden">
+                <view class="shop-title">
+                  {{ thirdItem.name }}
+                </view>
+                <view v-if="computedThirdItem(thirdItem).length > 0">
+                  <view
+                    class="shop-info-box"
+                    v-for="(shop, index3) in computedThirdItem(thirdItem)"
+                    :key="index3"
+                  >
+                    <view v-if="shop.type === 'fish'" class="shop-info info-fish" :class="{ 'no-left': shop.left }">
+                      <!-- 加减 -->
+                      <view class="shop-btn">
+                        <view>
+                        <text class="shop-text">{{ shop.name }}</text>
+                          <uni-tag
+                            v-for="(tag, tagIndex) in shop.tag"
+                            :key="tagIndex"
+                            :text="tag"
+                            :type="computedTag(tag)"
+                          />
+                        </view>
+                        <num-control :shop="shop" @add="addCart" @dec="decreaseCart"></num-control>
                       </view>
-                      <num-control :shop="shop" @add="addCart" @dec="decreaseCart"></num-control>
                     </view>
-                  </view>
-                  <view v-else class="shop-info" :class="{ 'no-left': shop.left }">
-                    <text class="shop-text">{{ shop.name }}</text>
-                    <!-- 加减 -->
-                    <view class="shop-btn">
-                      <view>
-                        <text class="shop-price">￥{{ shop.price || '-' }}</text>
-                        <uni-tag
-                          v-for="(tag, tagIndex) in shop.tag"
-                          :key="tagIndex"
-                          :text="tag"
-                          :type="computedTag(tag)"
-                        />
+                    <view v-else class="shop-info" :class="{ 'no-left': shop.left }">
+                      <text class="shop-text">{{ shop.name }}</text>
+                      <!-- 加减 -->
+                      <view class="shop-btn">
+                        <view>
+                          <text class="shop-price">￥{{ shop.price || '-' }}</text>
+                          <uni-tag
+                            v-for="(tag, tagIndex) in shop.tag"
+                            :key="tagIndex"
+                            :text="tag"
+                            :type="computedTag(tag)"
+                          />
+                        </view>
+                        <num-control :shop="shop" @add="addCart" @dec="decreaseCart"></num-control>
                       </view>
-                      <num-control :shop="shop" @add="addCart" @dec="decreaseCart"></num-control>
                     </view>
                   </view>
                 </view>
-              </view>
-              <view v-else class="shop-no">
-                <text>暂无商品</text>
+                <view v-else class="shop-no">
+                  <text>暂无商品</text>
+                </view>
               </view>
             </view>
           </view>
@@ -268,17 +274,30 @@ export default {
   },
   methods: {
     filterShopList(value){
+      //first 左侧大分类
        this.secondCategorys.forEach((first) => {
+          first.hiddenNum = 0
+          first.hidden = false
           first.children?.forEach((second) => {
+            second.hiddenNum = 0
+            second.hidden = false
              second.children?.forEach(third => {
                if(third.name.indexOf(value) > -1) {
                  third.hidden = false
                } else {
                  third.hidden = true
+                 second.hiddenNum++
                }
              })
+             if(second.hiddenNum === second.children?.length || !second.children) {
+               second.hidden = true
+               first.hiddenNum++
+             }
           })
-        })
+           if(first.hiddenNum === first.children?.length) {
+               first.hidden = true
+           }
+        }) 
     },
     onInput(value) {
       this.filterShopList(value)
@@ -497,14 +516,17 @@ export default {
 
   .menu-wrapper {
     text-align: center;
-    width: 22%;
+    width: 24%;
     display: flex;
     flex-direction: column;
     background: #f3f5f7;
+    .left-content {
+      padding-bottom: 96upx;
+    }
 
     .second-menu-item {
-      padding: 0 10upx 0 20upx;
-      font-size: 28upx;
+      padding: 0 10upx 0 10upx;
+      font-size: 30upx;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -549,7 +571,7 @@ export default {
   }
 
   .shops-wrapper {
-    padding: 14upx 20upx;
+    padding: 14upx 16upx;
     .shop-info-box,
     .shop-btn {
       display: flex;

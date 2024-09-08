@@ -80,6 +80,7 @@ export const getCategoryList = () => {
 
               firstNode.children.push({
                 name: secondKey,
+                fold: true,
                 children: secondChildren
               })
             })
