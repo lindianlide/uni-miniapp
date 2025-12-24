@@ -2,8 +2,8 @@
   <view class="order-detail">
     <!-- <view class="order-notice"> 注：三文鱼价格不计入总价，具体价钱与业务员核实 </view> -->
     <view class="order-info">
-      <uni-section title="地址信息">
-        <view class="order-item item-flex">
+      <uni-section title="地址信息" v-if="userShopList.length>0">
+        <!-- <view class="order-item item-flex">
           <view>
             <text class="is-required">*</text>
             <text class="text-name">姓名：</text>
@@ -11,6 +11,7 @@
           <uni-easyinput
             placeholder="请填写姓名"
             v-model="userName"
+            disabled
             :inputBorder="false"
             :clearable="false"
           />
@@ -22,6 +23,7 @@
           </view>
           <uni-easyinput
             placeholder="请填写手机号"
+            disabled
             v-model="userPhone"
             :inputBorder="false"
             type="number"
@@ -35,10 +37,21 @@
           </view>
           <uni-easyinput
             placeholder="请填写物流信息"
+            disabled
             v-model="userAddress"
             :inputBorder="false"
             :clearable="false"
           />
+        </view> -->
+       <view class="order-item item-flex" v-if="userShopList.length>0">
+          <view>
+            <text class="text-name">分店信息：</text>
+          </view>
+          <uni-data-select
+          style="width: 60%;"
+            v-model="userShop"
+            :localdata="userShopList"
+          ></uni-data-select>
         </view>
       </uni-section>
 
@@ -77,8 +90,7 @@
 
 <script>
 import { useAppStore } from '@/stores/modules/app'
-
-import { postOrderAdd, getUserDetail, postUserUpdate } from '@/api/index'
+import { postOrderAdd, getUserDetail, getUserShopList, postUserUpdate } from '@/api/index'
 import { accMul } from '@/utils/index'
 
 export default {
@@ -88,6 +100,9 @@ export default {
       userName: '',
       userPhone: '',
       userAddress: '',
+      userShop: '',
+      userShopList: [],
+      userCity: '',
       remark: '',
       addressType: ''
     }
@@ -119,39 +134,63 @@ export default {
     this.orderList = useAppStore().orderList
     getUserDetail().then((res) => {
       this.userName = res.name || ''
-      this.userPhone = res.mobile || ''
+      this.userPhone = res.addressMobile || ''
       this.userAddress = res.address || ''
+      this.userCity = res.city || ''
+    })
+
+    getUserShopList().then((res) => {
+      this.userShopList = res.map((item) => {
+        return { text: item.shopName, value: item.shopName, ...item }
+      })
+      //console.log('getUserShopList',this.userShopList)
     })
   },
   methods: {
     submitOrder() {
-      if (!this.userName || !this.userPhone || !this.userAddress) {
-        uni.showToast({ title: '请填写地址信息！', icon: 'none' })
+      if(this.userShop) {
+        const res = this.userShopList.find((item) => item.value == this.userShop)
+        this.userAddress = res?.address || ''
+        this.userName = res?.name || ''
+        this.userPhone = res?.mobile || ''
+      }
+      if (!this.userName) {
+        uni.showToast({ title: '请联系业务员维护收货姓名！', icon: 'none' })
         return
       }
-      const params = {
-        type: this.addressType,
-        name: this.userName,
-        address: this.userAddress,
-        mobile: this.userPhone
-      }
-      postUserUpdate(params).then(() => {
-        uni.setStorageSync('addressType', this.addressType)
-      })
+      // const params = {
+      //   type: this.addressType,
+      //   name: this.userName,
+      //   address: this.userAddress,
+      //   mobile: this.userPhone
+      // }
+      // postUserUpdate(params).then(() => {
+      //   uni.setStorageSync('addressType', this.addressType)
+      // })
 
       this.orderList.forEach((order, index) => {
         const params = {
           userName: this.userName,
           userPhone: this.userPhone,
           userAddress: this.userAddress,
+          userCity: this.userCity,
+          userShop: this.userShop,
           remark: this.remark,
           price: order.price,
           count: order.count,
+          id: order.id,
           name: order.name,
           category: order.category,
           supply: order.supply,
-          costPrice: order.costPrice
+          costPrice: order.costPrice,
+          orderRelative:order.orderRelative,//下单关联 1
+          productFx1:order.productFx1,//产品分析1
+          productFx2:order.productFx2,//产品分析2
+          productFx3:order.productFx3,//产品分析3
+          productFx4:order.productFx4,//产品分析4
+          productDes:order.productDes,//产品说明
         }
+        
         postOrderAdd(params)
           .then(() => {})
           .finally(() => {

@@ -1,5 +1,5 @@
 import { clearUniStorage } from '@/utils'
-const baseURL = 'https://madan.dayangjingzhou.top/api'
+const baseURL = 'https://dayangjingzhou.top/api'
 
 const request = (
   method,
@@ -31,6 +31,7 @@ const request = (
       method: method,
       data,
       header: { 'content-type': 'application/json', __token__: data.token },
+      timeout: 60000,
       success: (res) => {
         showLoading && uni.hideLoading()
         if (res.data.code == 401) {

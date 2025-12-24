@@ -80,7 +80,7 @@ export default {
     getUserDetail().then((res) => {
       this.id = res.id || ''
       this.name = res.name || ''
-      this.mobile = res.mobile || ''
+      this.mobile = res.addressMobile || ''
       this.address = res.address || ''
       this.currentRadio = res.addressType
     })

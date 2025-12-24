@@ -140,10 +140,10 @@ export const getOrderStatus = (statusList = []) => {
     const status = statusList[0]
     if (status.indexOf('取消确认中') > -1) {
       return 'canceling'
-    } else if (status.indexOf('订单取消') > -1) {
+    } else if (status.indexOf('取消订单') > -1) {
       return 'cancel'
     } else {
-      return ''
+      return status
     }
   } else {
     return ''

@@ -5,7 +5,7 @@
         <uni-search-bar v-model="searchValue" placeholder="搜索产品名称" cancelButton="none" @input="onInput" @clear="onClear">
         </uni-search-bar>
       </view>
-      <view class="title-tag"
+      <view class="title-tag" v-if="firstCategorys.length > 0"
         ><uni-segmented-control
           :current="currentFirstIndex"
           :values="firstCategorys"
@@ -149,7 +149,7 @@
 import ShopCart from './components/ShoppingCart.vue'
 import NumControl from './components/NumControl.vue'
 import { formatTime, clearUniStorage } from '@/utils/index'
-import { getCategoryList, getAllPriceList } from '@/api/index'
+import { getCategoryList, getAllPriceList, getUserDetail } from '@/api/index'
 const menuInfo = uni.getMenuButtonBoundingClientRect();
 export default {
   data() {
@@ -201,24 +201,11 @@ export default {
     getCategoryList().then((res) => {
       this.categorys = res
     })
+    this.getPriceList('sh')
 
-    getAllPriceList()
-      .then((priceRes) => {
-        this.isloading = false
-        this.categorys.forEach((first) => {
-          first.children.forEach((second) => {
-            second.children.forEach((third) => {
-              third.children = priceRes[third.key]
-            })
-          })
-        })
-        setTimeout(() => {
-          this.getHeightList()
-        }, 1000)
-      })
-      .catch(() => {
-        this.isloading = false
-      })
+    getUserDetail().then((res) => {
+      uni.setStorageSync('owner',res.owner)
+    })
 
     // uni.showShareMenu({
     //   withShareTicket: true,
@@ -273,6 +260,27 @@ export default {
     }
   },
   methods: {
+    getPriceList(type) {
+      this.isloading = true
+      getAllPriceList(type)
+      .then((priceRes) => {
+        this.isloading = false
+        this.categorys.forEach((first) => {
+          first.children.forEach((second) => {
+            second.children.forEach((third) => {
+              third.children = priceRes[third.key]
+            })
+          })
+        })
+        setTimeout(() => {
+          this.getHeightList()
+        }, 1000)
+      })
+      .catch(() => {
+        this.isloading = false
+      })
+    },
+
     filterShopList(value){
       //first 左侧大分类
        this.secondCategorys.forEach((first) => {
@@ -313,6 +321,7 @@ export default {
       this.currentFirstIndex = e.currentIndex
       //todo zw
       this.addressType = this.firstCategorys[e.currentIndex] === '广州' ? 'gz' : 'sh'
+      this.getPriceList(this.addressType)
     },
 
     selectThird(secIndex, thirdIndex) {
@@ -476,18 +485,19 @@ export default {
        
       }
     .title-tag {
-      font-size: 28upx;
+      font-size: 32upx;
       ::v-deep .segmented-control {
-        height: 56upx;
+        height: 64upx;
+        line-height: 64upx;
         border: 2upx solid #0a28a7;
-        border-radius: 28upx;
+        border-radius: 32upx;
         .segmented-control__item {
           //max-width: 90upx;
           padding: 2upx 10upx;
           border: none;
           &.segmented-control__item--button--active {
-            border-radius: 24upx;
-             padding: 2upx 14upx;
+            border-radius: 30upx;
+            padding: 2upx 14upx;
           }
         }
       }
@@ -526,7 +536,7 @@ export default {
 
     .second-menu-item {
       padding: 0 10upx 0 10upx;
-      font-size: 30upx;
+      font-size: 34upx;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -542,7 +552,7 @@ export default {
     }
 
     .third-menu-item {
-      font-size: 28upx;
+      font-size: 30upx;
       width: 100%;
       display: flex;
       align-items: center;
@@ -601,13 +611,13 @@ export default {
 
     .shop-title {
       padding: 10upx 0 10upx 0upx;
-      font-size: 32upx;
+      font-size: 34upx;
       color: #0a28a7;//#8c8c8c;
       font-weight: bold;
     }
     .shop-no {
       padding: 10upx 0 10upx 0upx;
-      font-size: 28upx;
+      font-size: 30upx;
       color: #000;
     }
 
@@ -617,7 +627,7 @@ export default {
       display: flex;
       flex-direction: column;
       flex: 2;
-      font-size: 28upx;
+      font-size: 30upx;
       justify-content: space-between;
       height: 90upx;
       &.info-fish {

@@ -63,3 +63,29 @@
     opacity: 1;
   }
 }
+
+.tag-large-xl {
+  width: 100%;
+  height: 32rpx;
+  .uni-tag {
+    font-size: 32rpx !important;
+  }
+}
+
+.tag-large-l {
+  width: 100%;
+  height: 28rpx;
+  .uni-tag {
+    font-size: 28rpx !important;
+  }
+}
+
+.tag-circle {
+  .uni-tag {
+    border-radius: 40upx !important;
+  }
+}
+
+.is-disabled {
+  margin: 4rpx 0;
+}

@@ -35,45 +35,74 @@ export const postLoginIn = (data) => {
 }
 
 /**
+ * @function 查询下单客户
+ */
+export const getLoginUser = (data) => {
+  // io1uk1w_mamswitch_m3s2: 1 //是否下单
+  return request('POST', '/miniprom/loginIn', data, {
+    showLoading: true,
+    hideToast: false,
+    needToken: false,
+    errorShow: false
+  })
+}
+
+const updateCategoryFormCache = (params={}) => {
+  setTimeout(() => {
+    return request(
+      'POST',
+      '/miniprom/updateFormCache?form_id=9d6ef4ae8b1f4050bee5f0a65d64ea0e&cache_key=' + 'category',
+      params
+    )
+  }, 10000)
+}
+/**
  * @function 查询分类
  */
 export const getCategoryList = () => {
   //处理搭贝返回的分类数据
-  const params = {}
+  const params = {
+    page: 1,
+    page_size: 150,
+  }
   return request(
     'POST',
-    '/miniprom/getFormRecord?form_id=' + '18444f24676f444ab1c15a10d3f05538',
+    '/miniprom/getFormRecord?form_id=9d6ef4ae8b1f4050bee5f0a65d64ea0e&cache_key=' + 'category',
     params
   ).then((res) => {
     if (res.data) {
-      const groupRes = groupBy(res.data, 'i8kxg30_maminput_gkr5')
+      updateCategoryFormCache(params)
+      //二级排序
+      const resSort = res.data.sort(sortByChar('asc', 'i7yhr1u_digitalformat_0drr'))
+      //一级分类
+      const groupRes = groupBy(resSort, 'ij6pwfy_maminput_2gwd')
       const firstCategory = Object.keys(groupRes)
+      //sh,gz
       firstCategory.forEach((firstKey) => {
-        // groupRes[firstKey].sort(
-        //   (a, b) => a.i9yv3wu_digitalformat_74d7 - b.i9yv3wu_digitalformat_74d7
-        // )
-        groupRes[firstKey] = groupBy(groupRes[firstKey], 'io3uccc_maminput_fun6')
+        //二级分类
+        groupRes[firstKey] = groupBy(groupRes[firstKey], 'idk108p_maminput_bqs3')
       })
-
       const group = []
       const sortDir = uni.getStorageSync('addressType') === 'gz' ? 'asc' : 'desc'
       Object.keys(groupRes)
         .sort(sortBy(sortDir))
         .forEach((firstKey) => {
+          //sh、gz
           const firstNode = {
             name: firstKey,
             children: []
           }
+          //firstValues 二级分类
           const firstValues = groupRes[firstKey]
           Object.keys(firstValues)
-            .sort(sortBy('desc'))
             .forEach((secondKey) => {
+              if(secondKey === 'undefined') return
               const secondChildren = firstValues[secondKey]
                 .map((secItem) => {
                   return {
-                    name: secItem.i84admc_maminput_uwg9,
-                    key: secItem.ik6s1nd_maminput_x230,
-                    sort: secItem.izdqvjj_digitalformat_8f25
+                    name: secItem.ix5zzk5_maminput_8ncg,//三级分类
+                    key: secItem.ib2vg09_maminput_btak, //分类关联
+                    sort: secItem.ix41poi_digitalformat_wgqu || 999 //三级分类排序
                   }
                 })
                 .sort(sortByChar('asc', 'sort'))
@@ -97,100 +126,136 @@ export const getCategoryList = () => {
 /**
  * @function 查询所有报价
  */
-export const getAllPriceList = () => {
-  //uni.showLoading({ mask: true })
-  const reqShFish = getShFishList()
-  const reqGzFish = getGzFrishList()
-  const reqShFrozen1 = getShFrozenList(1, 350)
-
-  //const reqShMeat = getShMeatList()
-
-  return Promise.all([reqShFish, reqGzFish, reqShFrozen1]).then((values) => {
-    // uni.hideLoading()
-    const listAll = [...values[0], ...values[1], ...values[2]]
-    const groupList = groupBy(listAll, 'relative')
-    //todo 排序
-    //console.log('values[2]', values[2])
-
-    return groupList
-  })
+export const getAllPriceList = (type) => {
+  if(type === 'sh') {
+    //uni.showLoading({ mask: true })
+    const reqFishSh = getFishList('上海三文鱼')
+    const reqFrozen = getFrozenList(1, 500)
+    //const reqShMeat = getShMeatList()
+    return Promise.all([reqFishSh,reqFrozen]).then((values) => {
+      // uni.hideLoading()
+      const listAll = [...values[0], ...values[1]]
+      const groupList = groupBy(listAll, 'relative')
+      return groupList
+    })
+  } else if(type === 'gz') {
+     return getFishList('广州三文鱼').then((res) => {
+      const groupList = groupBy(res, 'relative')
+      return groupList
+    })
+  }
 }
 
 /**
- * @function 查询上海三文鱼报价
+ * @function 查询三文鱼报价
  */
-export const getShFishList = () => {
+export const getFishList = (type) => {
   const params = {
+    page: 1,
+    page_size: 150,
     filter: {
-      ixd16ij_mamselect_iyhw: ''
+      //ibck4fg_mamselect_6mxf: '', //库存不足
+      iu0wd65_mamselect_g450: type
     }
   }
   return request(
     'POST',
-    '/miniprom/getFormRecord?form_id=' + '876c0d7cfc1845d7bc738125ee1a249e',
+    '/miniprom/getFormRecord?form_id=22566adf16f8482f866e0700a70e9919',
     params
   ).then((res) => {
     const result = res.data
-      .filter((item) => item.sys_create_time > getDayTimeStamp())
+      //.filter((item) => item.sys_create_time > getDayTimeStamp())
       .map((filterItem) => {
         return {
-          name: filterItem.ion8nju_maminput_hi7k,
-          size: filterItem.iamz55g_abouttable_flaw,
-          price: filterItem.iq5wdlg_digitalformat_9vwa,
-          origin: filterItem.ifqpdfn_abouttable_hldv, //产地
-          date: filterItem.i93qz0a_maminput_7a63,
-          relative: filterItem.iufvz60_maminput_00x0,
-          supply: filterItem.iaxw72t_abouttable_s6ks, //供应商
-          tag: filterItem.irgnxxx_mamcheckbox_cofw, //tag: ["靓"]
-          left: filterItem.ixd16ij_mamselect_iyhw, //left: ["库存不足"],
+          id: filterItem.id,
+          name: filterItem.its2mkd_maminput_pd5s, //小程序报价表
+          //size: filterItem.iamz55g_abouttable_flaw,
+          price: filterItem.iu71q5n_digitalformat_n6c8,//售价 1
+          //origin: filterItem.ifqpdfn_abouttable_hldv, //产地
+          //date: filterItem.i93qz0a_maminput_7a63,
+          relative: filterItem.iz0utpo_maminput_4ubm,//分类关联
+          supply: filterItem.iltbqib_abouttable_inu9, //供应商 1
+          //tag: filterItem.irgnxxx_mamcheckbox_cofw, //tag: ["靓"]
+          left: filterItem.ibck4fg_mamselect_6mxf, //left: ["库存不足"],
           count: 0,
-          sort1: filterItem.i93qz0a_maminput_7a63, //日期
-          sort2: filterItem.i3ynqdj_maminput_peev, //厂号
-          category: '上海仓',
+          sort1: filterItem.it1thu7_digitalformat_aa16,//一级排序 //老filterItem.i93qz0a_maminput_7a63, //日期
+          sort2: filterItem.i355x4k_digitalformat_tzbm,//二级排序//老filterItem.i3ynqdj_maminput_peev, //厂号
+          category: filterItem.iu0wd65_mamselect_g450,//'上海仓',
           type: 'fish',
-          costPrice: filterItem.iuqrlct_digitalformat_3ygo //成本单价
+          costPrice: filterItem.i3pt7hh_digitalformat_sgk1, //成本单价 1
+          orderRelative:filterItem.ihslco8_maminput_b078,//下单关联 1
+          productFx1:filterItem.i114ydh_maminput_esqo,//产品分析1
+          productFx2:filterItem.izyn11v_maminput_6x4w,//产品分析2
+          productFx3:filterItem.ibeqe8s_maminput_d1aj,//产品分析3
+          productFx4:filterItem.irb4gzd_maminput_mr1m,//产品分析4
+          productDes:filterItem.iwubvhu_maminput_sqa8,//产品说明
         }
       })
-      .filter(item => item.relative)
+      .filter(item => item.relative && !item.left)
     return result.sort(myFishsort)
   })
 }
 
 /**
- * @function 查询上海冻品报价
+ * @function 更新缓存
  */
-export const getShFrozenList = (pageNo = 1, pageSize = 200) => {
+ const updateFrozenFormCache = (params) => {
+  setTimeout(() => {
+    return request(
+      'POST',
+      '/miniprom/updateFormCache?form_id=22566adf16f8482f866e0700a70e9919&cache_key=' + 'frozen',
+      params
+    )
+  }, 3000)
+}
+
+
+/** 
+ * @function 查询冻品报价
+ */
+export const getFrozenList = (pageNo = 1, pageSize = 200) => {
   const params = {
     page: pageNo,
     page_size: pageSize,
     filter: {
-      idewdc8_mamselect_gajg: ''
+      //ibck4fg_mamselect_6mxf: '',//库存情况
+      iu0wd65_mamselect_g450: '上海冻品仓'
     }
   }
   return request(
     'POST',
-    '/miniprom/getFormRecord?form_id=' + '3246bd3c011949009357dddec82ebfc6',
+    '/miniprom/getFormRecord?form_id=22566adf16f8482f866e0700a70e9919&cache_key=' + 'frozen',
     params
   ).then((res) => {
+    updateFrozenFormCache(params)
+
     const result = res.data.map((filterItem) => {
       return {
-        name: filterItem.i41e5ba_maminput_e6aa,
-        size: filterItem.ihkdud1_maminput_lj55,
-        price: filterItem.izfahdm_digitalformat_edxh,
-        origin: filterItem.iy0zlwf_maminput_q528, //产地
-        date: '',
-        relative: filterItem.i9h503l_maminput_ukid,
-        supply: filterItem.iyp0fb3_abouttable_3pdl, //供应商
-        tag: filterItem.in9pclo_mamcheckbox_woga, //tag: ["靓"]
+        id: filterItem.id,
+        name: filterItem.its2mkd_maminput_pd5s,//小程序报价表
+        //size: filterItem.ihkdud1_maminput_lj55,
+        price: filterItem.iu71q5n_digitalformat_n6c8,//售价
+        //origin: filterItem.iy0zlwf_maminput_q528, //产地
+        //date: '',
+        relative: filterItem.iz0utpo_maminput_4ubm,
+        supply: filterItem.iltbqib_abouttable_inu9, //供应商
+        //tag: filterItem.in9pclo_mamcheckbox_woga, //tag: ["靓"]
         count: 0,
-        left: filterItem.idewdc8_mamselect_gajg, //库存情况
-        sort1: filterItem.iisa4hf_digitalformat_j31v, //一级排序
-        sort2: filterItem.iz680v0_digitalformat_nt0t, //二级排序
-        category: '冻品仓',
-        costPrice: filterItem.ixwev4e_digitalformat_iz4j //成本单价
+        type: 'frozen',
+        left: filterItem.ibck4fg_mamselect_6mxf,//idewdc8_mamselect_gajg, //库存情况
+        sort1: filterItem.it1thu7_digitalformat_aa16, //一级排序
+        sort2: filterItem.i355x4k_digitalformat_tzbm, //二级排序
+        category: filterItem.iu0wd65_mamselect_g450,//'上海冻品仓',
+        costPrice: filterItem.i3pt7hh_digitalformat_sgk1, //成本单价
+        orderRelative:filterItem.ihslco8_maminput_b078,//下单关联 1
+        productFx1:filterItem.i114ydh_maminput_esqo,//产品分析1
+        productFx2:filterItem.izyn11v_maminput_6x4w,//产品分析2
+        productFx3:filterItem.ibeqe8s_maminput_d1aj,//产品分析3
+        productFx4:filterItem.irb4gzd_maminput_mr1m,//产品分析4
+        productDes:filterItem.iwubvhu_maminput_sqa8,//产品说明
       }
     })
-    .filter(item => item.relative)
+    .filter(item => item.relative && !item.left)
     // 先按sort1排序，sort1相同再按sort2排序
     function mysortFrozen(a, b) {
       if (a.relative !== b.relative) return a.relative < b.relative ? -1 : 1
@@ -213,6 +278,7 @@ export const getShMeatList = () => {
   ).then((res) => {
     return res.data.map((filterItem) => {
       return {
+        id: filterItem.id,
         name: filterItem.i2h44pj_maminput_pr1h,
         size: filterItem.igvmsvr_maminput_gvoi,
         price: filterItem.ikb9zg6_digitalformat_qx4t,
@@ -232,70 +298,51 @@ export const getShMeatList = () => {
   })
 }
 
-/**
- * @function 查询广州三文鱼报价
- */
-export const getGzFrishList = () => {
-  const params = {
-    filter: {
-      id5q9nc_mamradio_vqwq: ''
-    }
-  }
-  return request(
-    'POST',
-    '/miniprom/getFormRecord?form_id=' + 'cacc1acd20df441ea520720ff75ccf94',
-    params
-  ).then((res) => {
-    const result = res.data
-      .filter((item) => item.sys_create_time > getDayTimeStamp())
-      .map((filterItem) => {
-        return {
-          name: filterItem.ion8nju_maminput_hi7k,
-          size: filterItem.iamz55g_abouttable_flaw,
-          price: filterItem.ixb8m3b_digitalformat_q6kp,
-          origin: filterItem.ifqpdfn_abouttable_hldv, //产地
-          date: filterItem.iam1jzh_date_b5w5, //报价日期
-          relative: filterItem.i75ca1p_maminput_axez,
-          supply: filterItem.iaxw72t_abouttable_s6ks, //供应商
-          tag: filterItem.ishdrj2_mamcheckbox_3pmu, //tag: ["靓"]
-          count: 0,
-          left: filterItem.id5q9nc_mamradio_vqwq, //库存情况
-          sort1: filterItem.i93qz0a_maminput_7a63, //一级排序
-          sort2: filterItem.ii97iyb_maminput_4tan, //二级排序
-          category: '广州仓',
-          type: 'fish',
-          costPrice: filterItem.iz7pni8_digitalformat_ehlp //成本单价
-        }
-      }).filter(item => item.relative)
-
-    return result.sort(myFishsort)
-  })
-}
-
 export const postOrderAdd = (params) => {
   const data = {
     //record_id: '7281e3455c46426e8fe01128331457fb',
-    i0lql71_abouttable_2ny5: params.userName,
-    i7m8loi_maminput_8dhk: params.userPhone,
-    ibmi15k_maminput_7q3y: params.userAddress,
-    ikkpvb6_maminput_jhtk: params.remark, //下单备注
-    i1dd6gm_digitalformat_ewd8: params.count, //数量
-    isqjeo6_digitalformat_4mk9: params.price, //单价
-    icc1co0_userhelp_3abl: uni.getStorageSync('owner'),
-    iqwarxc_mamradio_u8rz: [params.category], //发货仓
-    irigm4o_mamradio_umb1: '件', //todo 单位
-    i8dpxd7_maminput_1i4e: params.name, //产品,
-    ie11igd_date_hddv: getDayTimeStamp(),
-    iuvh8zy_maminput_ogl5: params.name, //下单产品,
-    i3rxds2_maminput_5pb7: params.userName, //下单客户信息,
-    ilsf0gd_maminput_81r9: params.userAddress, //下单物流信息,
-    ijckk15_maminput_2mcu: uni.getStorageSync('userInfo').id, //客户id
-    ix9qdte_maminput_bjfb: params.supply, //供应商
-    igbpy0k_digitalformat_2fti: params.costPrice //成本单价
+    iknaezh_abouttable_63je: params.userName,
+    imb5rt8_maminput_thkc: params.userPhone,
+    i81kjkm_maminput_7jcc: params.userAddress,
+    itjsu5x_abouttable_he04: params.userShop,//分店
+    iqylscj_maminput_kn30: params.remark, //下单备注
+    igl6j4r_digitalformat_jaxn: params.count, //数量
+    iher1qq_digitalformat_ccs1: params.price, //单价
+    ii8m7a7_userhelp_8kub: uni.getStorageSync('owner'),
+    ijrdhjj_mamselect_mbul: params.category, //发货仓
+    ijuxm1o_maminput_klor: params.category[0], //发货仓字段
+    im5rln3_mamselect_rdxk: ['件'], //todo 单位
+    ib9g576_maminput_mu4f: params.id, //下单产品idtodo
+    iqdrmjp_abouttable_btrj_ref_id: params.id, //产品id
+    iqdrmjp_abouttable_btrj: params.name, //产品,todo
+    i1utlm0_date_1d5k: getDayTimeStamp(),
+    if38wbt_maminput_kqjd: params.orderRelative + '___' + params.count + '件',//会被搭贝覆盖
+    // iuvh8zy_maminput_ogl5: params.name, //下单产品,todo
+    // i3rxds2_maminput_5pb7: params.userName, //下单客户信息,todo
+    // ilsf0gd_maminput_81r9: params.userAddress, //下单物流信息,todo
+    iohkoc6_maminput_vlgy: uni.getStorageSync('userInfo').id, //客户id
+    ieraw47_maminput_58gx: params.supply, //供应商
+    isg3euh_mamswitch_kwhw: 1, //是否小程序下单
+    iz7oy62_mamradio_a5f0: ['未审核'],
+    //i2r31la_threelevel_zvag: params.userCity, //城市
+    i2r31la_threelevel_zvag_province: getUserInfo().province,
+    i2r31la_threelevel_zvag_city: getUserInfo().city,
+    i2r31la_threelevel_zvag_town: getUserInfo().town,
+    //iji7g3t_mamradio_w55v: ['未发货'], //发货状态todo
+    //igbpy0k_digitalformat_2fti: params.costPrice //成本单价todo
+    i30aeij_maminput_29f4: params.orderRelative, //下单关联 1
+    iqalvik_maminput_plj2: params.productFx1, //产品分析1
+    i97w1d6_maminput_4472: params.productFx2, //产品分析2
+    in2b0v7_maminput_jwru: params.productFx3, //产品分析3
+    i7pp4ry_maminput_ckl1: params.productFx4, //产品分析4
+    ikfom8h_maminput_j0g0: params.productDes, //产品说明
+    is9nywy_digitalformat_k294: params.costPrice, //成本单价
+    idflnjw_digitalformat_qt19: params.price, //填充售价
+
   }
   return request(
     'POST',
-    '/miniprom/recordCreate?form_id=' + '130b67a3a6fc4721bc7ce821c4e2f1ef',
+    '/miniprom/recordCreate?form_id=' + '5ccf12cd306347e39359e35a9deb486d',
     data,
     {
       showLoading: true,
@@ -305,12 +352,12 @@ export const postOrderAdd = (params) => {
     }
   )
 }
-
+//客户信息 new
 export const getUserDetail = () => {
   return request(
     'GET',
     '/miniprom/getRecordDetail?form_id=' +
-      '22f8ee1371ee4830b0a5fee58cdf1224&record_id=' +
+      'ac4975c1950646a880a0a9f297a511c5&record_id=' +
       getUserInfo().id,
     {
       showLoading: false,
@@ -322,9 +369,12 @@ export const getUserDetail = () => {
     const data = {
       id: res.data.id,
       name: res.data.isfbz3t_maminput_2w53,
-      mobile: res.data.i724tmj_maminput_76x4,
+      mobile: res.data.iu4bpxu_maminput_jkig,
+      addressMobile: res.data.i724tmj_maminput_76x4,
       address: res.data.ixyi1j4_maminput_dhot || res.data.i6t5xj1_maminput_2m4w,
-      addressType: res.data.ixyi1j4_maminput_dhot ? 'gz' : 'sh'
+      addressType: res.data.ixyi1j4_maminput_dhot ? 'gz' : 'sh',
+      city: res.data.i6c09ko_threelevel_da10,
+      owner: res.data.imw6zmq_userhelp_imz2, //责任人
     }
     return data
   })
@@ -337,14 +387,14 @@ export const postUserUpdate = (params) => {
     ixyi1j4_maminput_dhot: params.type === 'gz' ? params.address : '', //物流广州
     i6t5xj1_maminput_2m4w: params.type === 'sh' ? params.address : '', //物流上海
     isfbz3t_maminput_2w53: params.name, //名称
-    i724tmj_maminput_76x4: params.mobile //电话
+    iu4bpxu_maminput_jkig: params.mobile //电话
   }
   if (share) {
     data.imw6zmq_userhelp_imz2 = share
   }
   return request(
     'POST',
-    '/miniprom/recordUpdate?form_id=' + '22f8ee1371ee4830b0a5fee58cdf1224',
+    '/miniprom/recordUpdate?form_id=' + 'ac4975c1950646a880a0a9f297a511c5',
     data,
     {
       showLoading: true,
@@ -356,17 +406,19 @@ export const postUserUpdate = (params) => {
 }
 
 export const getOrderList = () => {
-  const postOrderList = getPostOrderList()
-  const sureOrderList = getSureOrderList()
-  return Promise.all([postOrderList, sureOrderList]).then((values) => {
-    values[0].forEach((item1) => {
-      const orderIndex = values[1].findIndex((item2) => item2.orderId === item1.orderId)
-      if (orderIndex === -1) {
-        values[1].push(item1)
-      }
-    })
-    return values[1]
-  })
+
+  return getPostOrderList()
+  // const postOrderList = getPostOrderList()
+  // const sureOrderList = getSureOrderList()
+  // return Promise.all([postOrderList, sureOrderList]).then((values) => {
+  //   values[0].forEach((item1) => {
+  //     const orderIndex = values[1].findIndex((item2) => item2.orderId === item1.orderId)
+  //     if (orderIndex === -1) {
+  //       values[1].push(item1)
+  //     }
+  //   })
+  //   return values[1]
+  // })
 }
 /**
  * @function 查询提交订单
@@ -374,42 +426,70 @@ export const getOrderList = () => {
 export const getPostOrderList = () => {
   const params = {
     filter: {
-      ijckk15_maminput_2mcu: getUserInfo().id, //todo '7a358606f3b64b058a1c0d26a1adc72c'
-      ie11igd_date_hddv: getDayTimeStamp()
+      iohkoc6_maminput_vlgy: getUserInfo().id, //todo '7a358606f3b64b058a1c0d26a1adc72c'
+      //ie11igd_date_hddv: getDayTimeStamp()
     }
   }
   return request(
     'POST',
-    '/miniprom/getFormRecord?form_id=' + '130b67a3a6fc4721bc7ce821c4e2f1ef',
+    '/miniprom/getFormRecord?form_id=5ccf12cd306347e39359e35a9deb486d',
     params
   ).then((res) => {
     return res.data?.map((item) => {
       return {
         id: item.id,
-        realPrice: 0, //实收金额
-        unitPrice: item.isqjeo6_digitalformat_4mk9 || '--', //单价
-        md: '', //码单
-        name: item.iuvh8zy_maminput_ogl5, //产品名称
+        realPrice: item.ivjfnr6_digitalformat_4qck || 0, //实收金额
+        unitPrice: item.iher1qq_digitalformat_ccs1 || '--', //单价
+        md: item.iohc61p_digitalformat_8rly, //码单
+        name: item.iqdrmjp_abouttable_btrj, //产品名称
         orderId: item.id, //订单id
         isFrom: 'isNotSure',
-        status: getOrderStatus(item.i52puzi_mamselect_wi74),
+        orderStatus: item.iz7oy62_mamradio_a5f0 || [""], //订单信息反馈
+        status: getOrderStatus(item.i01hba7_mamselect_dc3n),
         //isSure: item.ifqpdfn_abouttable_hldv, //是否排单？todo
-        date: formatTime(item.ie11igd_date_hddv, 'yyyy-mm-dd') //下单日期
+        date: formatTime(item.i1utlm0_date_1d5k, 'yyyy-mm-dd'), //下单日期
+        number: item.igl6j4r_digitalformat_jaxn || 1, //数量
+        unit: item.im5rln3_mamselect_rdxk[0] || '件', //单位
+        userShop: item.itjsu5x_abouttable_he04,//分店信息
       }
     })
   })
 }
+//查询未付款订单
+export const getUnOrderList = () => {
+  const params = {
+    filter: {
+      iw60vcm_maminput_4c8y: getUserInfo().id, //todo '7a358606f3b64b058a1c0d26a1adc72c'
+      iyeyzxt_mamswitch_psfa: 0 //结清账单
+    }
+  }
+  return request(
+    'POST',
+    '/miniprom/getFormRecord?form_id=a9e3a3baaf9a4d39b9384150a0929b0c',
+    params
+  ).then((res) => {
+    return res.data?.map((item) => {
+      return {
+        id: item.id,
+        unPrice: item.iudf1d8_digitalformat_yqdn || 0, //剩余贷款
+      }
+    })
+  })
+}
+
 /**
  * @function 确认订单取消
  */
 export const postOrderListUpdate = (params) => {
   const data = {
     record_id: params.id,
-    i52puzi_mamselect_wi74: ['取消确认中']
+    iklkxql_mamradio_plxy: [params.updateType],
+    i9y6z6h_maminput_rk1b: params.orderRemark //备注
+
   }
   return request(
     'POST',
-    '/miniprom/recordUpdate?form_id=' + '130b67a3a6fc4721bc7ce821c4e2f1ef',
+    '/miniprom/recordUpdate?form_id=' + '5ccf12cd306347e39359e35a9deb486d',
     data
   )
 }
@@ -465,14 +545,84 @@ export const getSureOrderList = () => {
   })
 }
 
+/**
+ * @function 查询业务员信息
+ */
+export const getOwner = (name, type) => {
+  const params = {
+    filter: {
+      i25c6n5_maminput_f4vd: name
+    }
+  }
+  return request(
+    'POST',
+    '/miniprom/getFormRecord?form_id=' + '85edd9d8a0954cf3ae6c4ee552a18e0d',
+    params
+  ).then((res) => {
+    const {i25c6n5_maminput_f4vd="佳妮", i9sw2nt_maminput_qw72="13232076543" } = (res.data && res.data[0]) || {}
+    if(type == 'fail') {
+      uni.showModal({
+        title: '提示', // 模态框标题
+        content: '登录失败，请联系业务员' + i25c6n5_maminput_f4vd + '，联系方式：' + i9sw2nt_maminput_qw72+'核对账号。', // 模态框内容
+        showCancel: false, // 是否显示取消按钮，默认为true
+        confirmText: '确定', // 确定按钮的文字
+      })
+    } else {
+      uni.showModal({
+        title: '提示', // 模态框标题
+        content: '您为首次下单用户，请联系业务员' + i25c6n5_maminput_f4vd + '，联系方式：' + i9sw2nt_maminput_qw72+'维护信息。', // 模态框内容
+        showCancel: false, // 是否显示取消按钮，默认为true
+        confirmText: '确定', // 确定按钮的文字
+      })
+    }
+    uni.removeStorageSync('token')
+    // return res.data?.map((item) => {
+    //   return {
+    //     id: item.id,
+    //     name: item.i25c6n5_maminput_f4vd, //业务员姓名
+    //     phone:item.i9sw2nt_maminput_qw72//手机
+    //   }
+    // })
+  })
+}
+
+
+
+/**
+ * @function 查询客户分店
+ */
+export const getUserShopList = () => {
+  const params = {
+    filter: {
+      irdz4bn_maminput_1xez: getUserInfo().id
+    }
+  }
+  return request(
+    'POST',
+    '/miniprom/getFormRecord?form_id=' + '21090ef839e349e8b57f7bf69ab3136c',
+    params
+  ).then((res) => {
+    return res.data?.map((item) => {
+      return {
+        id: item.id,
+        shopName:item.io4fgl4_maminput_2dt4,
+        name:item.i5z40q7_abouttable_9qtx,
+        address:item.i6t5xj1_maminput_2m4w || item.ixyi1j4_maminput_dhot,
+        mobile:item.i724tmj_maminput_76x4,
+      }
+    })
+  })
+}
+
+//客户需求
 export const postCustomerNeedAdd = (params) => {
   const data = {
-    if2dcrh_maminput_77i1: params.content,
-    i5x5rfg_maminput_55d8: params.mobile
+    iyn56pj_maminput_h7sj: params.content,
+    idt58x7_maminput_27pd: params.mobile
   }
   return request(
     'POST',
-    '/miniprom/recordCreate?form_id=' + 'b68defe6cdce44b0b50f8eef1e43267c',
+    '/miniprom/recordCreate?form_id=' + '26f320bdf0964efc8469ee679df6fbf1',
     data,
     {
       showLoading: true,
@@ -482,15 +632,15 @@ export const postCustomerNeedAdd = (params) => {
     }
   )
 }
-
+//商务合作new
 export const postBusinessCooperateAdd = (params) => {
   const data = {
-    if2dcrh_maminput_77i1: params.content,
-    i5x5rfg_maminput_55d8: params.mobile
+    idat8b0_maminput_n8ys: params.content,
+    iirj91t_maminput_n9gh: params.mobile
   }
   return request(
     'POST',
-    '/miniprom/recordCreate?form_id=' + 'a334fc82509848e2bc993b906d49c077',
+    '/miniprom/recordCreate?form_id=' + '8b9d7419e336493193b6ff909b22ea5f',
     data,
     {
       showLoading: true,
@@ -500,15 +650,15 @@ export const postBusinessCooperateAdd = (params) => {
     }
   )
 }
-
+//投诉建议new
 export const postMySuggestionAdd = (params) => {
   const data = {
-    if2dcrh_maminput_77i1: params.content,
-    i5x5rfg_maminput_55d8: params.mobile
+    i2vp1r3_maminput_e6kb: params.content,
+    io1dir9_maminput_3npx: params.mobile
   }
   return request(
     'POST',
-    '/miniprom/recordCreate?form_id=' + '4af8e88dee974adbaa52e6359fd5ee91',
+    '/miniprom/recordCreate?form_id=' + '8996606bc18d422e89d27b9a0c00766e',
     data,
     {
       showLoading: true,

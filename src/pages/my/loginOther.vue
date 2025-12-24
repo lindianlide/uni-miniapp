@@ -7,19 +7,21 @@
     </view>
     <view class="login-form">
       <view class="form-item item-flex">
-        <input type="number" v-model="number" maxlength="11" placeholder="请输入手机号" />
+        <input type="number" v-model="number" maxlength="11" placeholder="请输入帐号" />
         <!-- <text @click="getCode">{{ countTime ? countTime + 's' : '获取验证码' }}</text> -->
       </view>
-      <!-- <view class="form-item">
+      <view class="form-item">
         <input
-          type="number"
-          v-model="verifyCode"
-          :maxlength="verifyCodeLength"
+          type="password"
+          v-model="password"
           class="form-item"
-          placeholder="请输入验证码"
+          placeholder="请输入密码"
         />
-      </view> -->
-      <button type="primary" class="login-button" @click="goHome">登录</button>
+      </view>
+      <button type="primary" class="login-button" :disabled="!(password && number)" @click="goHome">登录</button>
+      <view class="login-notice">
+        您好，此服务仅限已合作商户使用，具体账户密码请联系业务员开通获取。
+      </view>
     </view>
   </view>
 </template>
@@ -29,11 +31,13 @@ import { ref } from 'vue'
 import { useLogin } from '@/hooks/useLogin'
 
 const number = ref('')
+const password = ref('')
 const mode = ref('scaleToFill')
 
 const goHome = () => {
   uni.showLoading({})
-  useLogin().login({ phone: number.value })
+  useLogin().login({ phone: number.value, password: password.value })
+  //useLogin().login({ phone: number.value })
 }
 </script>
 
@@ -67,5 +71,11 @@ const goHome = () => {
       margin-top: 100upx;
     }
   }
+}
+.login-notice {
+  margin-top: 20upx;
+  font-size: 24upx;
+  color: #999;
+  text-align: center;
 }
 </style>
